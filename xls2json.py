@@ -1,5 +1,10 @@
 #!python3
-# -*- coding: utf-8 -*-
+# xls2json.py
+# This module is used to convert particular excel files into json file
+# of which will be used in the T.E.A.M web application.
+# The excel file can be converted is listed in docMapping dictionary.
+# When excel files get extended either horizentally or vertically,  
+# the second element in the value list of docMapping should be updated accordingly.
 
 import win32com.client as win32
 import os, re, json, sys
@@ -7,6 +12,7 @@ import os, re, json, sys
 
 docMapping = {
             '五组标准化文件列表.xlsx': ['doc-list.json', 'H285'],
+            'acronym.xlsx':['acronym.json', 'C1027'],
             '五组设计工具清单.xls': ['tool-list.json', 'H33']
         }
 
