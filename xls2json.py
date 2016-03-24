@@ -12,7 +12,7 @@ import os, re, json, sys
 
 docMapping = {
             '五组标准化文件列表.xlsx': ['doc-list.json', 'H285'],
-            'acronym.xlsx':['acronym.json', 'C1027'],
+            'acronym.xlsx':['acronym.json', 'C1028'],
             '五组设计工具清单.xls': ['tool-list.json', 'H33']
         }
 
