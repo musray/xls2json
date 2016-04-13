@@ -179,8 +179,13 @@ def Jgenerator(file):
 if __name__ == '__main__':
 
     excelFiles = getArgvFile(sys.argv[1:])
+    countFiles = 0
     for file in excelFiles:
+        countFiles += 1
+        message = str( countFiles ) + '. ' + file[0] + ' : 开始转换...'
+        print(message, end='')
         # here file should be a 
         # tuple (file_name, abs_path_with_file_name)
         Jgenerator(file)
+        print('完成')
 
