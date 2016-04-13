@@ -11,7 +11,7 @@ import os, re, json, sys, copy
 headers = {
         'DIO_header' : ['unit', 'io_tag_no', 'signal_name', 'io_type', 'card_type', 'config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'io_card_location.ch_no', 'output_setting.fail_mode', 'distribution', 'terminal_block.no', 'terminal_block.terminal', 'device_no', 'signal_condition', 'contact_type', 'connection_source', 'relevent_sheet', 'remark1', 'remark2', 'remark3', 'id', 'sheet_no', 'rev', 'cnpdc_id_code', 'ext_code', 'cnpdc_desig', 'bdsd_sheet', 'cabinet_id', 'wd_drawing_no', 'wd_index_no', 'single_redundant', 'power_supply' ],
         'PIF_header' : ['unit', 'io_tag_no', 'signal_name', 'io_type', 'card_type', 'config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'io_card_location.ch_no', 'output_setting.fail_mode', 'output_setting.clk', 'output_setting.group', 'distribution', 'terminal_block.no', 'terminal_block.terminal', 'device_no', 'signal_condition', 'contact_type', 'connection_source', 'relevent_sheet', 'remark1', 'remark2', 'remark3', 'id', 'sheet_no', 'rev', 'cnpdc_id_code', 'ext_code', 'cnpdc_desig', 'bdsd_sheet', 'cabinet_id', 'wd_drawing_no', 'wd_index_no', 'single_redundant', 'power_supply'],
-        'AIO_header' : ['unit', 'io_tag_no', 'signal_name', 'io_type', 'card_type', 'config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'eng_value.low', 'eng_value.hi', 'eng_value.unit', 'past_value_rate', 'overrange_low_enable', 'overrange_hi_enable', 'overrange_low_value', 'overrange_hi_value', 'input_setting.filter', 'input_setting.digital_filter', 'input_setting.lowcut', 'input_setting.pls_edge', 'input_setting.sq_root', 'input_setting.unused', 'output_setting.fail_mode', 'measurement_range', 'distribution', 'terminal_block.no', 'terminal_block.terminal', 'data_source.tag', 'data_source.connection', 'relevent_sheet', 'remark1', 'remark2', 'remark3', 'id', 'sheet_no', 'rev', 'cnpdc_id_code', 'ext_code', 'cnpdc_desig', 'bdsd_sheet', 'cabinet_id', 'wd_drawing_no', 'wd_index_no', 'single_redundant', 'power_supply']
+        'AIO_header' : ['unit', 'io_tag_no', 'signal_name', 'io_type', 'card_type', 'config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'eng_value.low', 'eng_value.hi', 'eng_value.unit', 'past_value_rate', 'overrange.low_enable', 'overrange.hi_enable', 'overrange.low_value', 'overrange.hi_value', 'input_setting.filter', 'input_setting.digital_filter', 'input_setting.lowcut', 'input_setting.pls_edge', 'input_setting.sq_root', 'input_setting.unused', 'output_setting.fail_mode', 'measurement_range', 'distribution', 'terminal_block.no', 'terminal_block.terminal', 'data_source.tag', 'data_source.connection', 'relevent_sheet', 'remark1', 'remark2', 'remark3', 'id', 'sheet_no', 'rev', 'cnpdc_id_code', 'ext_code', 'cnpdc_desig', 'bdsd_sheet', 'cabinet_id', 'wd_drawing_no', 'wd_index_no', 'single_redundant', 'power_supply']
 }
 
 def getHeader(file):
@@ -75,9 +75,7 @@ def getExcelRows(file):
         countRows += 1
     # here we have to do some math, again, to figure out
     # range of actual rows and columns we need
-    print(countRows)
     rows = ws.Range('A3', 'AZ'+str(2 + countRows)).Value
-    print(len(rows))
     wb.Close()
     return rows
 
@@ -124,6 +122,12 @@ def Jgenerator(file):
 
         # starts to parse the rows of IO List
         count = 0
+        # the values in these four columns 
+        # need to be kept be a form of float.
+        keepFloat = ['eng_value.low',
+                     'eng_value.hi',
+                     'overrange_low_value',
+                     'overrange_hi_value', ] 
         for row in rows:
             count += 1
             aDic = {}
@@ -131,9 +135,16 @@ def Jgenerator(file):
 
                 # get cell value in the tuple of row
                 # if the value is float, turn it to string
+                # but if the value is from columns in keepFloat
+                # we still want to keep the value in form of a float
+                # rather than round it to a form of int
+                # because it represents a physical value
                 cellValue = row[ header.index(column) ] 
                 if type(cellValue) == type(1.0):
-                    cellValue = str(int(cellValue))
+                    if column in keepFloat:
+                        cellValue = str(cellValue)
+                    else:
+                        cellValue = str(int(cellValue))
 
                 # write the value to aDic
                 # aDic represents a row of IO
@@ -163,7 +174,6 @@ def Jgenerator(file):
             else:  # not the last row
                 f.write(aJson + ',' + '\n')
 
-        print(len(rows), count)
         f.write('\n]')
 
 if __name__ == '__main__':
