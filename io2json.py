@@ -7,7 +7,27 @@
 
 import win32com.client as win32
 import os, re, json, sys, copy
-header = ['io_tag_no', 'signal_name', 'io_type', 'card_type', 'config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'io_card_location.ch_no', 'output_setting.fail_mode', 'output_setting.clk', 'output_setting.group', 'distribution', 'terminal_block.no', 'terminal_block.terminal', 'device_no', 'signal_condition', 'contact_type', 'connection_source', 'relevent_sheet', 'remark1', 'remark2', 'remark3', 'id', 'sheet_no', 'cnpdc_id_code', 'ext_code', 'cnpdc_desig', 'bdsd_sheet', 'cabinet_id', 'wd_drawing_no', 'wd_index_no', 'single_redundant', 'power_supply' ]
+header = ['unit', 'io_tag_no', 'signal_name', 'io_type', 'card_type', 'config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'io_card_location.ch_no', 'output_setting.fail_mode', 'output_setting.clk', 'output_setting.group', 'distribution', 'terminal_block.no', 'terminal_block.terminal', 'device_no', 'signal_condition', 'contact_type', 'connection_source', 'relevent_sheet', 'remark1', 'remark2', 'remark3', 'id', 'sheet_no', 'cnpdc_id_code', 'ext_code', 'cnpdc_desig', 'bdsd_sheet', 'cabinet_id', 'wd_drawing_no', 'wd_index_no', 'single_redundant', 'power_supply' ]
+
+def getUnit(file):
+    '''
+        take a file name like HYH3 ESFAC-A DIO.xls
+        extract HYH3 from the name then return it
+    '''
+    matcher = re.compile(r'^([a-zA-Z]{2,3}\d{1})\s*')
+    comeout = matcher.search(file)
+
+    # deal non-regular file name
+    # in which missing unit index
+    while comeout == None:
+        print('\nWarning -->')
+        unit = input('\t' + file + ' 的机组信息获取失败。\n\t请在此输入(例如HYH3， YJ5等) --> ')
+        comeout = matcher.search(unit)
+
+        if comeout:
+            break
+
+    return comeout.group(1).lower()
 
 def getExcelRows(file):
     '''
@@ -53,21 +73,28 @@ def Jgenerator(file):
     # see above
     rows = getExcelRows(file)[2:]
 
-    # Jname = docMapping[file[0]][0]
     Jname = os.path.splitext(file[1])[0] + ".json"
 
     with open(Jname, 'w', encoding='utf-8') as f:
+
+        # extract the unit nubmer from file name
+        # If the unit number is not specified in file name
+        # getUnit function will ask for a unit number from user.
+        unit = getUnit(file[0])
+
+        # first, let's write some start points to the json file
         f.write('[\n')
 
+        # starts to parse the rows of IO List
         count = 0
         for row in rows:
             count += 1
             aDic = {}
-            for column in header:
+            for column in header[1:]:
                 if '.' in column:
                     # here the format of key might like
                     # this: parent.child
-                    # we would like to split parent and child
+                    # we would like to split parent as sub1 and child
                     sub1, sub2 = column.split('.')
                     aDic.setdefault(sub1, {})
                     cellValue = row[ header.index(column) + 1 ] # +1 to skip the first row in IO List
@@ -78,6 +105,10 @@ def Jgenerator(file):
                     aDic[sub1][sub2] = cellValue
                 else: 
                     aDic[column] = row[ header.index(column) + 1 ]
+
+            # last step of generating aDic:
+            # write the unit number
+            aDic[header[0]] = unit
             aJson = json.dumps(aDic, ensure_ascii=False);
 
             # Now let's wirte the row object
