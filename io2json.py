@@ -1,5 +1,7 @@
 #!python3
 # io2json.py
+# Version: 0.8
+# Date: 2016-4-14
 # This module is used to convert particular IO list to json file
 # of which will be used in the T.E.A.M web application.
 # When excel files get extended either horizentally or vertically,  
@@ -9,9 +11,9 @@ import win32com.client as win32
 import os, re, json, sys, copy
 
 headers = {
-        'DIO_header' : ['unit', 'io_tag_no', 'signal_name', 'io_type', 'card_type', 'config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'io_card_location.ch_no', 'output_setting.fail_mode', 'distribution', 'terminal_block.no', 'terminal_block.terminal', 'device_no', 'signal_condition', 'contact_type', 'connection_source', 'relevent_sheet', 'remark1', 'remark2', 'remark3', 'id', 'sheet_no', 'rev', 'cnpdc_id_code', 'ext_code', 'cnpdc_desig', 'bdsd_sheet', 'cabinet_id', 'wd_drawing_no', 'wd_index_no', 'single_redundant', 'power_supply' ],
-        'PIF_header' : ['unit', 'io_tag_no', 'signal_name', 'io_type', 'card_type', 'config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'io_card_location.ch_no', 'output_setting.fail_mode', 'output_setting.clk', 'output_setting.group', 'distribution', 'terminal_block.no', 'terminal_block.terminal', 'device_no', 'signal_condition', 'contact_type', 'connection_source', 'relevent_sheet', 'remark1', 'remark2', 'remark3', 'id', 'sheet_no', 'rev', 'cnpdc_id_code', 'ext_code', 'cnpdc_desig', 'bdsd_sheet', 'cabinet_id', 'wd_drawing_no', 'wd_index_no', 'single_redundant', 'power_supply'],
-        'AIO_header' : ['unit', 'io_tag_no', 'signal_name', 'io_type', 'card_type', 'config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'eng_value.low', 'eng_value.hi', 'eng_value.unit', 'past_value_rate', 'overrange.low_enable', 'overrange.hi_enable', 'overrange.low_value', 'overrange.hi_value', 'input_setting.filter', 'input_setting.digital_filter', 'input_setting.lowcut', 'input_setting.pls_edge', 'input_setting.sq_root', 'input_setting.unused', 'output_setting.fail_mode', 'measurement_range', 'distribution', 'terminal_block.no', 'terminal_block.terminal', 'data_source.tag', 'data_source.connection', 'relevent_sheet', 'remark1', 'remark2', 'remark3', 'id', 'sheet_no', 'rev', 'cnpdc_id_code', 'ext_code', 'cnpdc_desig', 'bdsd_sheet', 'cabinet_id', 'wd_drawing_no', 'wd_index_no', 'single_redundant', 'power_supply']
+        'AIO_header' : [ 'unit', 'signal.tag', 'signal.description', 'signal.type', 'cards.io', 'settings.config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'engineering_value.low', 'engineering_value.high', 'engineering_value.unit', 'past_value_rate', 'overrange.low_enable', 'overrange.high_enable', 'overrange.low', 'overrange.high', 'settings.filter', 'settings.digital_filter', 'settings.low_cut', 'settings.pls_edge', 'settings.sq_root', 'settings.unused', 'settings.fail_mode', 'measurable_range', 'cards.distribution', 'terminal.block_no', 'terminal.termimal_no', 'data_src.device', 'data_src.connection_src', 'refer_to.relevant_sheet', 'remarks.remark1', 'remarks.remark2', 'remarks.remark3', 'info.id', 'info.sheet_no', 'info.rev', 'cnpdc.id_code', 'cnpdc.ext_code', 'cnpdc.designation', 'refer_to.bdsd_sheet', 'cabinet_id', 'refer_to.wd_no', 'refer_to.wd_sheet', 'cards.single_redundant', 'cards.io_power_supply' ],
+        'DIO_header' : [ 'unit', 'signal.tag', 'signal.description', 'signal.type', 'cards.io', 'settings.config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'io_card_location.ch_no', 'settings.fail_mode', 'cards.distribution', 'terminal.block_no', 'terminal.termimal_no', 'data_src.device', 'data_src.signal_condition', 'data_src.contact_type', 'data_src.connection_src', 'refer_to.relevant_sheet', 'remarks.remark1', 'remarks.remark2', 'remarks.remark3', 'info.id', 'info.sheet_no', 'info.rev', 'cnpdc.id_code', 'cnpdc.ext_code', 'cnpdc.designation', 'refer_to.bdsd_sheet', 'cabinet_id', 'refer_to.wd_no', 'refer_to.wd_sheet', 'cards.single_redundant', 'cards.io_power_supply' ],
+        'PIF_header' : [ 'unit', 'signal.tag', 'signal.description', 'signal.type', 'cards.io', 'settings.config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'io_card_location.ch_no', 'settings.fail_mode', 'settings.clk', 'settings.group', 'cards.distribution', 'terminal.block_no', 'terminal.termimal_no', 'data_src.device', 'data_src.signal_condition', 'data_src.contact_type', 'data_src.connection_src', 'refer_to.relevant_sheet', 'remarks.remark1', 'remarks.remark2', 'remarks.remark3', 'info.id', 'info.sheet_no', 'info.rev', 'cnpdc.id_code', 'cnpdc.ext_code', 'cnpdc.designation', 'refer_to.bdsd_sheet', 'cabinet_id', 'refer_to.wd_no', 'refer_to.wd_sheet', 'cards.single_redundant', 'cards.io_power_supply' ]
 }
 
 def getHeader(file):
@@ -128,6 +130,10 @@ def Jgenerator(file):
                      'eng_value.hi',
                      'overrange_low_value',
                      'overrange_hi_value', ] 
+        # DEBUG MODE
+        # print(len(rows))
+        # DEBUG MODE
+
         for row in rows:
             count += 1
             aDic = {}
@@ -174,6 +180,7 @@ def Jgenerator(file):
             else:  # not the last row
                 f.write(aJson + ',' + '\n')
 
+        print(str(count) + '行...', end='')
         f.write('\n]')
 
 if __name__ == '__main__':
