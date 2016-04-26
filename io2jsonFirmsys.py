@@ -1,5 +1,5 @@
 #!python3
-# io2json.py
+# io2json.py (!!!IMPORTANT: Only for FIRMSYS!!!)
 # Version: 0.8
 # Date: 2016-4-14
 # This module is used to convert particular IO list to json file
@@ -11,23 +11,51 @@ import win32com.client as win32
 import os, re, json, sys, copy
 
 headers = {
-        'AIO_header' : [ 'unit', 'signal.tag', 'signal.description', 'signal.type', 'cards.io', 'settings.config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'engineering_value.low', 'engineering_value.high', 'engineering_value.unit', 'past_value_rate', 'overrange.low_enable', 'overrange.high_enable', 'overrange.low', 'overrange.high', 'settings.filter', 'settings.digital_filter', 'settings.low_cut', 'settings.pls_edge', 'settings.sq_root', 'settings.unused', 'settings.fail_mode', 'measurable_range', 'cards.distribution', 'terminal.block_no', 'terminal.termimal_no', 'data_src.device', 'data_src.connection_src', 'refer_to.relevant_sheet', 'remarks.remark1', 'remarks.remark2', 'remarks.remark3', 'info.id', 'info.sheet_no', 'info.rev', 'cnpdc.id_code', 'cnpdc.ext_code', 'cnpdc.designation', 'refer_to.bdsd_sheet', 'cabinet_id', 'refer_to.wd_no', 'refer_to.wd_sheet', 'cards.single_redundant', 'cards.io_power_supply' ],
-        'DIO_header' : [ 'unit', 'signal.tag', 'signal.description', 'signal.type', 'cards.io', 'settings.config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'io_card_location.ch_no', 'settings.fail_mode', 'cards.distribution', 'terminal.block_no', 'terminal.termimal_no', 'data_src.device', 'data_src.signal_condition', 'data_src.contact_type', 'data_src.connection_src', 'refer_to.relevant_sheet', 'remarks.remark1', 'remarks.remark2', 'remarks.remark3', 'info.id', 'info.sheet_no', 'info.rev', 'cnpdc.id_code', 'cnpdc.ext_code', 'cnpdc.designation', 'refer_to.bdsd_sheet', 'cabinet_id', 'refer_to.wd_no', 'refer_to.wd_sheet', 'cards.single_redundant', 'cards.io_power_supply' ],
-        'PIF_header' : [ 'unit', 'signal.tag', 'signal.description', 'signal.type', 'cards.io', 'settings.config', 'master_card.mc_no', 'master_card.ch_no1', 'master_card.ch_no2', 'io_card_location.cf1_no', 'io_card_location.cf2_no', 'io_card_location.iou_no', 'io_card_location.sl_no', 'io_card_location.ch_no', 'settings.fail_mode', 'settings.clk', 'settings.group', 'cards.distribution', 'terminal.block_no', 'terminal.termimal_no', 'data_src.device', 'data_src.signal_condition', 'data_src.contact_type', 'data_src.connection_src', 'refer_to.relevant_sheet', 'remarks.remark1', 'remarks.remark2', 'remarks.remark3', 'info.id', 'info.sheet_no', 'info.rev', 'cnpdc.id_code', 'cnpdc.ext_code', 'cnpdc.designation', 'refer_to.bdsd_sheet', 'cabinet_id', 'refer_to.wd_no', 'refer_to.wd_sheet', 'cards.single_redundant', 'cards.io_power_supply' ]
+        'AIO_header' : [ "unit", "signal.tag", "signal.data_type", "engineering_value.initial", "engineering_value.high", "engineering_value.low", "signal.original_tag", "signal.measure", "engineering_value.unit", "arith_block", "signal.type", "io_card_location.cab_no", "io_card_location.cf1_no", "io_card_location.sl_no", "io_card_location.ch_no", "settings.fail_mode", "overrange.low", "overrange.high", "overrange.deadzone", "overrange.enable", "signal.description", "cards.io", "cards.interface", "terminal.io_block", "terminal.io_terminal", "refer_to.bdsd_sheet", "refer_to.wd_sheet", "remarks.from_to", "terminal.reg_block", "terminal.reg_terminal", "signal.reg_type", "signal.sensor", "signal.power_supply", "cards.reg", "remarks.distribution_goto", "terminal.dist_block", "terminal.dist_terminal", "refer_to.wd_sheet(2)", "info.cf", "info.rev", "cabinet_id" ],
+        'DIO_header' : [ "unit", "signal.tag", "signal.data_type", "engineering_value.initial", "signal.original_tag", "signal.type", "io_card_location.cab_no", "io_card_location.cf1_no", "io_card_location.sl_no", "io_card_location.ch_no", "settings.fail_mode", "signal.description", "cards.io", "cards.interface", "terminal.io_block", "terminal.io_terminal", "refer_to.bdsd_sheet", "refer_to.wd_sheet", "remarks.from_to", "terminal.reg_block", "terminal.reg_terminal", "signal.power_supply", "remarks.distribution_goto", "terminal.dist_block", "terminal.dist_terminal", "refer_to.wd_sheet(2)", "info.cf", "info.rev", "cabinet_id" ],
+        'CIO_header' : ["unit", "signal.tag", "signal.data_type", "engineering_value.initial", "signal.original_tag", "signal.type", "io_card_location.cab_no", "io_card_location.cf1_no", "io_card_location.sl_no", "io_card_location.ch_no", "settings.fail_mode", "signal.description", "cards.priority_logic", "cards.io", "cards.interface", "terminal.io_block", "terminal.io_terminal", "refer_to.bdsd_sheet", "refer_to.wd_sheet", "remarks.from_to", "terminal.reg_block", "terminal.reg_terminal", "signal.power_supply", "remarks.distribution_goto", "terminal.dist_block", "terminal.dist_terminal", "refer_to.wd_sheet(2)", "info.cf", "info.rev", "cabinet_id"]
 }
+
+def getCabinetID(file):
+    '''
+        take a file name like 反应堆保护机柜(RPC-CH1-Gr1)模拟量详细IO清单.xls
+        then determine of which type the feed in file name is 
+        return the particular header associated to its type of IO
+    '''
+
+    matcher = re.compile(r'''(
+                        (\w+-)
+                        (CH.*-)?
+                        (\w*\d*)
+                        )''', re.VERBOSE)
+
+    cabinet_id = matcher.search(file)
+
+    if cabinet_id == None:
+        print('\nError -->')
+        print('\t' + file + ' 无法确定机柜名称。请检查Excle文件命名。')
+        sys.exit(0)
+
+    return cabinet_id.group(0)
+    
 
 def getHeader(file):
     '''
-        take a file name like HYH3 ESFAC-A DIO.xls
+        take a file name like YJ5 ESFAC-A DIO.xls
         then determine of which type the feed in file name is 
         return the particular header associated to its type of IO
     '''
     all_types = {'AIO': 'AIO_header', 
+                 '模拟量': 'AIO_header',
                  'DIO': 'DIO_header',
-                 '16DO':'DIO_header', 
-                 'PIF': 'PIF_header'  }
+                 '数字量': 'DIO_header',
+                 'CIO': 'CIO_header',
+                 'CIM': 'CIO_header' }
 
-    matcher = re.compile(r'DIO|16DO|AIO|PIF')
+    # print('DEBUG')
+    # print(file)
+    matcher = re.compile(r'(AIO|模拟量|DIO|数字量|CIO|CIM)')
+
     IO_type = matcher.search(file)
 
     if IO_type == None:
@@ -39,7 +67,7 @@ def getHeader(file):
 
 def getUnit(file):
     '''
-        take a file name like HYH3 ESFAC-A DIO.xls
+        take a file name like YJ5 安全相关机柜（SRC-B1）CIM详细IO清单.xls
         extract HYH3 from the name then return it
     '''
     matcher = re.compile(r'^([a-zA-Z]{2,3}\d{1})\s*')
@@ -71,8 +99,7 @@ def getExcelRows(file):
     # how many rows are actually in this workbook
     countRows = 0
     for i in range(3, 10000):
-        if ws.Range('J' + str(i)).Value == None and \
-           ws.Range('M' + str(i)).Value == None :
+        if ws.Range('A' + str(i)).Value == None:
             break
         countRows += 1
     # here we have to do some math, again, to figure out
@@ -122,6 +149,7 @@ def Jgenerator(file):
         # If the unit number is not specified in file name
         # getUnit function will ask for a unit number from user.
         unit = getUnit(file[0])
+        cabinet_id = getCabinetID(file[0])
 
         # check if the IO list is any one of these types
         # AIO, DIO(16DO), PIF
@@ -132,13 +160,14 @@ def Jgenerator(file):
 
         # starts to parse the rows of IO List
         count = 0
-
         # the values in these four columns 
         # need to be kept be a form of float.
-        keepFloat = ['engineering_value.low',
-                     'engineering_value.hi',
+        keepFloat = ['engineering_value.initial',
+                     'engineering_value.low',
+                     'engineering_value.high',
                      'overrange.low',
-                     'overrange.high', ] 
+                     'overrange.deadzone',
+                     'overrange.high' ] 
         # DEBUG MODE
         # print(len(rows))
         # DEBUG MODE
@@ -179,6 +208,7 @@ def Jgenerator(file):
             # last step of generating aDic:
             # write the unit number
             aDic[header[0]] = unit
+            aDic[header[-1]] = cabinet_id
             aJson = json.dumps(aDic, ensure_ascii=False);
 
             # Now let's wirte the row object
@@ -191,19 +221,6 @@ def Jgenerator(file):
 
         print(str(count) + '行...', end='')
         f.write('\n]')
-
-# if __name__ == '__main__':
-
-#     excelFiles = getArgvFile(sys.argv[1:])
-#     countFiles = 0
-#     for file in excelFiles:
-#         countFiles += 1
-#         message = str( countFiles ) + '. ' + file[0] + ' : 开始转换...'
-#         print(message, end='')
-#         # here file should be a 
-#         # tuple (file_name, abs_path_with_file_name)
-#         Jgenerator(file)
-#         print('完成')
 
 if __name__ == '__main__':
 
