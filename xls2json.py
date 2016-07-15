@@ -13,7 +13,8 @@ import os, re, json, sys
 docMapping = {
             '五组标准化文件列表.xlsx': ['doc-list.json', 'H285'],
             'acronym.xlsx':['acronym.json', 'C1028'],
-            '五组设计工具清单.xls': ['tool-list.json', 'H33']
+            '五组设计工具清单.xls': ['tool-list.json', 'H33'],
+            'cabinets-and-layout.xlsx': ['cabinets-and-layout.json', 'K454']
         }
 
 def getExcelRows(file):
@@ -25,6 +26,8 @@ def getExcelRows(file):
     excel = win32.DispatchEx('Excel.Application')
     wb = excel.Workbooks.Open(file[1])
     ws = wb.Worksheets(1)
+
+    # get the total number of lines
     bottomRight = docMapping[file[0]][1]
     rows = ws.Range('A1', bottomRight).Value
     wb.Close()
